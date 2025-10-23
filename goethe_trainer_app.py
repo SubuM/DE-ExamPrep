@@ -12,57 +12,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- JAVASCRIPT FOR ZERO-COST BROWSER TTS ---
-# This script uses the browser's native SpeechSynthesis API, made more robust.
-JS_TTS_SCRIPT = """
-<script>
-    let germanVoice = null;
-    
-    // Function to ensure voices are loaded and find the German voice
-    function loadAndFindVoice() {
-        const voices = window.speechSynthesis.getVoices();
-        germanVoice = voices.find(voice => voice.lang.startsWith('de'));
-        // If the voice is found, we set the flag.
-        return !!germanVoice;
-    }
-    
-    // Load voices immediately and attach event listener for when they change
-    window.speechSynthesis.onvoiceschanged = loadAndFindVoice;
-    loadAndFindVoice();
-
-    // Main function called by the HTML button
-    function speakGerman(text) {
-        if (!('speechSynthesis' in window)) {
-            alert('Your browser does not support native text-to-speech.');
-            return;
-        }
-        
-        // Attempt to load voice right before speaking, just in case
-        if (!germanVoice) {
-            loadAndFindVoice();
-        }
-
-        var utterance = new SpeechSynthesisUtterance(text);
-        
-        // Apply the best German voice found
-        if (germanVoice) {
-            utterance.voice = germanVoice;
-        } else {
-            // Fallback: Set language to German
-            utterance.lang = 'de-DE';
-        }
-        
-        utterance.pitch = 1.0;
-        utterance.rate = 0.9; // Slightly slower speed for clarity
-        
-        // Stop any current speaking and start the new one
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
-    }
-</script>
-"""
-st.markdown(JS_TTS_SCRIPT, unsafe_allow_html=True) # Inject the script once
-
 # --- CONSTANTS & DATA STRUCTURES ---
 
 EXERCISE_TYPES = {
@@ -191,27 +140,22 @@ CONTENT_DB = {
             {"id": "A1_P30", "word": "Arbeiten", "meaning": "to work"},
         ],
         "listening": [
-            {"id": "A1_L1", "transcript": "Guten Tag. Wie heißen Sie? - Ich heiße Frau Schmidt.", "questions": [{"q": "Was hört die Person?", "options": ["Wie spät ist es?", "Wie heißen Sie?", "Wo wohnen Sie?"], "correct": 1}]},
-            {"id": "A1_L2", "transcript": "Ist das dein Fahrrad? - Nein, das ist das Auto von meinem Bruder.", "questions": [{"q": "Wem gehört das Auto?", "options": ["Der Frau", "Dem Bruder", "Dem Mann"], "correct": 1}]},
-            {"id": "A1_L3", "transcript": "Woher kommen Sie? - Ich komme aus Italien.", "questions": [{"q": "Woher kommt die Person?", "options": ["Spanien", "Frankreich", "Italien"], "correct": 2}]},
-            {"id": "A1_L4", "transcript": "Ich hätte gern eine Tasse Kaffee mit Milch, bitte.", "questions": [{"q": "Was bestellt die Person?", "options": ["Tee", "Kaffee", "Wasser"], "correct": 1}]},
-            {"id": "A1_L5", "transcript": "Es ist vierzehn Uhr.", "questions": [{"q": "Wie spät ist es?", "options": ["12:00 Uhr", "14:00 Uhr", "16:00 Uhr"], "correct": 1}]},
-            {"id": "A1_L6", "transcript": "Wie ist Ihre Telefonnummer? - Null-fünf-drei-zwei-eins.", "questions": [{"q": "Was fragt die Person?", "options": ["Die Adresse", "Die Nummer", "Den Namen"], "correct": 1}]},
-            {"id": "A1_L7", "transcript": "Entschuldigung, wo ist die Toilette? - Im ersten Stock links.", "questions": [{"q": "Wo ist die Toilette?", "options": ["rechts", "im ersten Stock", "im Erdgeschoss"], "correct": 1}]},
-            {"id": "A1_L8", "transcript": "Ich brauche ein Ticket nach Hamburg. - Einfache Fahrt oder hin und zurück?", "questions": [{"q": "Was möchte die Person kaufen?", "options": ["Essen", "Ein Buch", "Ein Ticket"], "correct": 2}]},
-            {"id": "A1_L9", "transcript": "Haben Sie ein Zimmer frei? - Ja, ein Doppelzimmer mit Blick auf den See.", "questions": [{"q": "Welches Zimmer ist frei?", "options": ["Einzelzimmer", "Doppelzimmer", "Dreibettzimmer"], "correct": 1}]},
-            {"id": "A1_L10", "transcript": "Können Sie das bitte wiederholen? - Gern, es ist sehr wichtig.", "questions": [{"q": "Was soll die andere Person tun?", "options": ["langsamer sprechen", "wiederholen", "stoppen"], "correct": 1}]},
+            {"id": "A1_L1", "transcript": "Guten Tag. Wie heißen Sie? - Ich heiße Frau Schmidt.", "q": "Was hört die Person?", "options": ["Wie spät ist es?", "Wie heißen Sie?", "Wo wohnen Sie?"], "correct": 1},
+            {"id": "A1_L2", "transcript": "Ist das dein Fahrrad? - Nein, das ist das Auto von meinem Bruder.", "q": "Wem gehört das Auto?", "options": ["Der Frau", "Dem Bruder", "Dem Mann"], "correct": 1},
+            {"id": "A1_L3", "transcript": "Woher kommen Sie? - Ich komme aus Italien.", "q": "Woher kommt die Person?", "options": ["Spanien", "Frankreich", "Italien"], "correct": 2},
+            {"id": "A1_L4", "transcript": "Ich hätte gern eine Tasse Kaffee mit Milch, bitte.", "q": "Was bestellt die Person?", "options": ["Tee", "Kaffee", "Wasser"], "correct": 1},
+            {"id": "A1_L5", "transcript": "Es ist vierzehn Uhr.", "q": "Wie spät ist es?", "options": ["12:00 Uhr", "14:00 Uhr", "16:00 Uhr"], "correct": 1},
+            {"id": "A1_L6", "transcript": "Wie ist Ihre Telefonnummer? - Null-fünf-drei-zwei-eins.", "q": "Was fragt die Person?", "options": ["Die Adresse", "Die Nummer", "Den Namen"], "correct": 1},
+            {"id": "A1_L7", "transcript": "Entschuldigung, wo ist die Toilette? - Im ersten Stock links.", "q": "Wo ist die Toilette?", "options": ["rechts", "im ersten Stock", "im Erdgeschoss"], "correct": 1},
+            {"id": "A1_L8", "transcript": "Ich brauche ein Ticket nach Hamburg. - Einfache Fahrt oder hin und zurück?", "q": "Was möchte die Person kaufen?", "options": ["Essen", "Ein Buch", "Ein Ticket"], "correct": 2},
+            {"id": "A1_L9", "transcript": "Haben Sie ein Zimmer frei? - Ja, ein Doppelzimmer mit Blick auf den See.", "q": "Welches Zimmer ist frei?", "options": ["Einzelzimmer", "Doppelzimmer", "Dreibettzimmer"], "correct": 1},
+            {"id": "A1_L10", "transcript": "Können Sie das bitte wiederholen? - Gern, es ist sehr wichtig.", "q": "Was soll die andere Person tun?", "options": ["langsamer sprechen", "wiederholen", "stoppen"], "correct": 1},
             # Expanded listening scenarios
-            {"id": "A1_L11", "transcript": "Ich wohne in der Schillerstraße 12. Die Miete ist 500 Euro.", "questions": [{"q": "Wie hoch ist die Miete?", "options": ["400 Euro", "500 Euro", "600 Euro"], "correct": 1}]},
-            {"id": "A1_L12", "transcript": "Mein Mann arbeitet als Arzt im Krankenhaus. Er arbeitet lange.", "questions": [{"q": "Was macht der Mann beruflich?", "options": ["Lehrer", "Polizist", "Arzt"], "correct": 2}]},
-            {"id": "A1_L13", "transcript": "Wir essen am Abend Brot und Käse.", "questions": [{"q": "Was essen sie am Abend?", "options": ["Reis und Fisch", "Brot und Käse", "Pizza"], "correct": 1}]},
-            {"id": "A1_L14", "transcript": "Der Bus fährt nur bis 20 Uhr.", "questions": [{"q": "Wie lange fährt der Bus?", "options": ["bis 21 Uhr", "bis 20 Uhr", "bis Mitternacht"], "correct": 1}]},
-            {"id": "A1_L15", "transcript": "Ich habe zwei Kinder, einen Sohn und eine Tochter.", "questions": [{"q": "Wie viele Kinder hat die Person?", "options": ["eins", "zwei", "drei"], "correct": 1}]},
-            {"id": "A1_L16", "transcript": "Können Sie mir helfen, ich habe meinen Schlüssel vergessen.", "questions": [{"q": "Was ist das Problem?", "options": ["Vergessenes Essen", "Vergessener Schlüssel", "Vergessene Tasche"], "correct": 1}]},
-            {"id": "A1_L17", "transcript": "Es ist draußen sehr kalt, ich ziehe meinen Mantel an.", "questions": [{"q": "Wie ist das Wetter?", "options": ["warm", "sonnig", "kalt"], "correct": 2}]},
-            {"id": "A1_L18", "transcript": "Wir treffen uns um halb sieben vor dem Kino.", "questions": [{"q": "Wann treffen sie sich?", "options": ["06:00 Uhr", "06:30 Uhr", "07:00 Uhr"], "correct": 1}]},
-            {"id": "A1_L19", "transcript": "Ich bin neu hier, wo kann ich einkaufen?", "questions": [{"q": "Was möchte die Person tun?", "options": ["Essen kochen", "Einkaufen", "Schlafen"], "correct": 1}]},
-            {"id": "A1_L20", "transcript": "Mein Name ist Luca, und ich wohne seit zwei Jahren in Deutschland.", "questions": [{"q": "Wie lange wohnt Luca in Deutschland?", "options": ["ein Jahr", "zwei Jahre", "drei Jahre"], "correct": 1}]},
+            {"id": "A1_L11", "transcript": "Ich wohne in der Schillerstraße 12. Die Miete ist 500 Euro.", "q": "Wie hoch ist die Miete?", "options": ["400 Euro", "500 Euro", "600 Euro"], "correct": 1},
+            {"id": "A1_L12", "transcript": "Mein Mann arbeitet als Arzt im Krankenhaus. Er arbeitet lange.", "q": "Was macht der Mann beruflich?", "options": ["Lehrer", "Polizist", "Arzt"], "correct": 2},
+            {"id": "A1_L13", "transcript": "Wir essen am Abend Brot und Käse.", "q": "Was essen sie am Abend?", "options": ["Reis und Fisch", "Brot und Käse", "Pizza"], "correct": 1},
+            {"id": "A1_L14", "transcript": "Der Bus fährt nur bis 20 Uhr.", "q": "Wie lange fährt der Bus?", "options": ["bis 21 Uhr", "bis 20 Uhr", "bis Mitternacht"], "correct": 1},
+            {"id": "A1_L15", "transcript": "Ich habe zwei Kinder, einen Sohn und eine Tochter.", "q": "Wie viele Kinder hat die Person?", "options": ["eins", "zwei", "drei"], "correct": 1},
         ],
         "writing": [
             {"id": "A1_W1", "prompt": "Schreiben Sie 3 Sätze über Ihre Hobbys."},
@@ -241,7 +185,7 @@ CONTENT_DB = {
             {"id": "A1_W25", "prompt": "Schreiben Sie die Uhrzeit auf Deutsch (z.B. 10:45 Uhr)."},
             {"id": "A1_W26", "prompt": "Schreiben Sie einen kurzen Satz mit dem Verb 'haben' (Perfekt)."},
             {"id": "A1_W27", "prompt": "Schreiben Sie 3 Sätze, wo Ihre Freunde wohnen."},
-            {"id": "A1_W28", "prompt": "Schreiben Sie einen kurzen Wunsch (z.b. Ich wünsche dir alles Gute)."},
+            {"id": "A1_W28", "prompt": "Schreiben Sie einen kurzen Wunsch (z.B. Ich wünsche dir alles Gute)."},
             {"id": "A1_W29", "prompt": "Schreiben Sie, wie Sie zur Arbeit/Uni kommen."},
             {"id": "A1_W30", "prompt": "Schreiben Sie einen Satz mit 'weil' (Begründung)."},
         ]
@@ -280,7 +224,7 @@ CONTENT_DB = {
             {"id": "A2_P1", "word": "Entschuldigung", "meaning": "excuse me"},
         ],
         "listening": [
-            {"id": "A2_L1", "transcript": "Können Sie mir bitte sagen, wie ich zum Bahnhof komme? - Gehen Sie geradeaus bis zur Ampel, dann links.", "questions": [{"q": "Was soll die Person an der Ampel tun?", "options": ["rechts gehen", "geradeaus gehen", "links gehen"], "correct": 2}]},
+            {"id": "A2_L1", "transcript": "Können Sie mir bitte sagen, wie ich zum Bahnhof komme? - Gehen Sie geradeaus bis zur Ampel, dann links.", "q": "Was soll die Person an der Ampel tun?", "options": ["rechts gehen", "geradeaus gehen", "links gehen"], "correct": 2},
         ],
         "writing": [
             {"id": "A2_W1", "prompt": "Schreiben Sie eine E-Mail an Ihren Freund über Ihren letzten Urlaub."},
@@ -302,7 +246,7 @@ CONTENT_DB = {
             {"id": "B1_P1", "word": "Gesellschaft", "meaning": "society"},
         ],
         "listening": [
-            {"id": "B1_L1", "transcript": "Der Gastronom sagte, dass er aufgrund steigender Lebensmittelpreise die Preise erhöhen müsse. Er hofft auf das Verständnis seiner Kunden.", "questions": [{"q": "Warum erhöht der Gastronom die Preise?", "options": ["wegen des Wetters", "wegen der Preise", "wegen der Lebensmittelpreise"], "correct": 2}]},
+            {"id": "B1_L1", "transcript": "Der Gastronom sagte, dass er aufgrund steigender Lebensmittelpreise die Preise erhöhen müsse. Er hofft auf das Verständnis seiner Kunden.", "q": "Warum erhöht der Gastronom die Preise?", "options": ["wegen des Wetters", "wegen der Preise", "wegen der Lebensmittelpreise"], "correct": 2},
         ],
         "writing": [
             {"id": "B1_W1", "prompt": "Diskutieren Sie die Vor- und Nachteile der Digitalisierung in der Schule. (ca. 80 Wörter)"},
@@ -322,7 +266,7 @@ CONTENT_DB = {
             {"id": "B2_P1", "word": "Gewährleisten", "meaning": "to guarantee"},
         ],
         "listening": [
-            {"id": "B2_L1", "transcript": "Der Soziologe betonte, dass der demografische Wandel eine fundamentale Umgestaltung der sozialen Sicherungssysteme erfordert. Dies sei unvermeidlich.", "questions": [{"q": "Was erfordert der demografische Wandel?", "options": ["neue Steuern", "eine fundamentale Umgestaltung", "mehr Arbeitskräfte"], "correct": 1}]},
+            {"id": "B2_L1", "transcript": "Der Soziologe betonte, dass der demografische Wandel eine fundamentale Umgestaltung der sozialen Sicherungssysteme erfordert. Dies sei unvermeidlich.", "q": "Was erfordert der demografische Wandel?", "options": ["neue Steuern", "eine fundamentale Umgestaltung", "mehr Arbeitskräfte"], "correct": 1},
         ],
         "writing": [
             {"id": "B2_W1", "prompt": "Analysieren Sie kritisch die Auswirkungen der Globalisierung auf die lokale Kultur. (ca. 100 Wörter)"},
@@ -688,15 +632,7 @@ class GoetheTrainer:
         
         # --- INPUT PHASE ---
         st.markdown(f"**Scenario:** *{self.levels[level]['name']} Level Listening*")
-        
-        # FIX: Render actual HTML button to trigger JS TTS function
-        # FIX: Correctly escape quotes inside the f-string for the JS call
-        escaped_transcript = exercise['transcript'].replace("'", "\\'")
-        st.markdown(f"""
-            <button onclick="speakGerman('{escaped_transcript}')">
-                🔊 Play Audio
-            </button>
-        """, unsafe_allow_html=True)
+        st.info("🔊 Audio Player Placeholder (TTS audio would play here for the scenario)")
         
         with st.expander("Show Transcript (for practice/checking)"):
             st.markdown(f"*{exercise['transcript']}*")
@@ -725,8 +661,8 @@ class GoetheTrainer:
         state_key = EXERCISE_TYPES["Sprechen (Pronunciation)"] # FIX: Used EXERCISE_TYPES
         st.subheader("🗣️ Pronunciation Practice (Sprechen)")
         
-        # FIX: Sample size changed to 30
-        pron_items = self._select_exercise(level, "pronunciation", state_key, 30)
+        # FIX: Sample size changed to 10
+        pron_items = self._select_exercise(level, "pronunciation", state_key, 10)
 
         if pron_items is None:
             st.warning(f"No pronunciation exercises available for {level} yet.")
@@ -738,15 +674,7 @@ class GoetheTrainer:
         for i, item in enumerate(pron_items):
             with st.expander(f"Word {i+1}: **{item['word']}**"):
                 st.markdown(f"**Meaning:** {item['meaning']}")
-                
-                # FIX: Render actual HTML button to trigger JS TTS function
-                escaped_word = item['word'].replace("'", "\\'")
-                st.markdown(f"""
-                    <button onclick="speakGerman('{escaped_word}')">
-                        🔊 Play Word
-                    </button>
-                    <p style="margin-top: 10px; font-size: 0.9em; color: #555;">🎤 Recording feature placeholder.</p>
-                """, unsafe_allow_html=True)
+                st.info("🎤 Recording feature placeholder. Speak the word now.")
             
         if st.session_state.get(f"checked_{state_key}"):
              st.success("Pronunciation marked as practiced.")
